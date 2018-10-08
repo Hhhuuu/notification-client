@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.erib.Notification</mainClass>
+                            <mainClass>ru.mamapapa.Notification</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

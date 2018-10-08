@@ -25,7 +25,7 @@ import static ru.mamapapa.utils.ReaderUtils.getReader;
 public class Notification {
     private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
     private static final String LIBERTY_NOT_FOUND = "Отсутствует обязательный параметр! Необходимо передать путь до папки Liberty";
-    private static final String SET_USER_ID = "Отсутствует обязательный параметр! Необходимо передать идентификатор пользователя телеграма";
+    private static final String SET_USER_ID = "Отсутствует обязательный параметр! Необходимо задать идентификатор пользователя телеграма!";
     private static final long DEFAULT_DELAY = 5L;
     private static Property property;
     private static String previousStart;
@@ -52,7 +52,7 @@ public class Notification {
     }
 
     public static void main(String[] args) throws Exception {
-        checkArg(args.length < 1 ? "" : args[0], LIBERTY_NOT_FOUND);
+        checkArg(getArg(args, 0), LIBERTY_NOT_FOUND);
 
         initializeProperty();
         initializeNotificationServices(args);
@@ -80,12 +80,6 @@ public class Notification {
         property.load();
     }
 
-    private static void checkArg(String arg, String errorMessage) throws NotifyException {
-        if (StringUtils.isEmpty(arg)) {
-            throw new NotifyException(errorMessage);
-        }
-    }
-
     private static void initializeNotificationServices(String[] args) {
         LOGGER.info("Инициализация каналов для уведомлений");
         String channels = property.getString(CHANNEL);
@@ -99,7 +93,7 @@ public class Notification {
                             notificationService = new WindowsNotifactionService();
                             break;
                         case TELEGRAM:
-                            String arg = args[1];
+                            String arg = getArg(args, 1);
                             checkArg(arg, SET_USER_ID);
                             notificationService = new TelegramNotificationService(arg);
                             break;
@@ -110,11 +104,17 @@ public class Notification {
                     }
                     servicesNotification.put(notificationChannel, notificationService);
                 } catch (Exception e) {
-                    throw new NotifyRuntimeException("Неизвестный тип канала!");
+                    throw new NotifyRuntimeException("Неизвестный тип канала!", e);
                 }
             }
         } else {
             throw new NotifyRuntimeException("Не заданы каналы для уведомлений!");
+        }
+    }
+
+    private static void checkArg(String arg, String errorMessage) throws NotifyException {
+        if (StringUtils.isEmpty(arg)) {
+            throw new NotifyException(errorMessage);
         }
     }
 
@@ -147,6 +147,10 @@ public class Notification {
 
     private static String getBodyText(String search) {
         return previousStart.substring(previousStart.indexOf(search), previousStart.length());
+    }
+
+    private static String getArg(String[] args, int index) {
+        return args.length - 1 >= index ? args[index] : "";
     }
 
     public static Property getProperty() {
