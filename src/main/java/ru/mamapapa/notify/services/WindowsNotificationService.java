@@ -11,8 +11,10 @@ import java.awt.*;
  *
  * @author Popov Maxim <m_amapapa@mail.ru>
  */
-public class WindowsNotifactionService implements NotificationService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WindowsNotifactionService.class);
+public class WindowsNotificationService implements NotificationService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WindowsNotificationService.class);
+    private TrayIcon trayIcon;
+    private SystemTray tray;
 
     @Override
     public void sendNotify(String header, String body) {
@@ -25,20 +27,22 @@ public class WindowsNotifactionService implements NotificationService {
 
     }
 
-    private static void notifyIfSupported(String header, String body) throws Exception {
+    private void notifyIfSupported(String header, String body) throws Exception {
         LOGGER.debug("Проверка поддержки уведомлений");
         if (SystemTray.isSupported()) {
             LOGGER.debug("Уведомления доступны");
-            SystemTray tray = SystemTray.getSystemTray();
-            Image image = Toolkit.getDefaultToolkit().getImage("images/tray.gif");
-            displayMessage(tray, image, header, body);
+            displayMessage(header, body);
         }
     }
 
-    private static void displayMessage(SystemTray tray, Image image, String header, String body) throws AWTException {
+    private void displayMessage(String header, String body) throws Exception {
         LOGGER.debug("Уведомление пользователя");
-        TrayIcon trayIcon = new TrayIcon(image);
-        tray.add(trayIcon);
+        if (trayIcon == null) {
+            Image image = Toolkit.getDefaultToolkit().getImage("images/tray.gif");
+            trayIcon = new TrayIcon(image);
+            tray = SystemTray.getSystemTray();
+            tray.add(trayIcon);
+        }
         trayIcon.displayMessage(header, body, TrayIcon.MessageType.INFO);
     }
 }

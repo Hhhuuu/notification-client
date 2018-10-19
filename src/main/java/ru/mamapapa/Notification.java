@@ -24,7 +24,7 @@ import static ru.mamapapa.utils.ReaderUtils.getReader;
  */
 public class Notification {
     private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
-    private static final String LIBERTY_NOT_FOUND = "Отсутствует обязательный параметр! Необходимо передать путь до папки Liberty";
+    private static final String LIBERTY_NOT_FOUND = "Отсутствует обязательный параметр! Необходимо передать путь до папки";
     private static final String SET_USER_ID = "Отсутствует обязательный параметр! Необходимо задать идентификатор пользователя телеграма!";
     private static final long DEFAULT_DELAY = 5L;
     private static Property property;
@@ -90,7 +90,7 @@ public class Notification {
                     NotificationService notificationService = null;
                     switch (notificationChannel) {
                         case WINDOWS:
-                            notificationService = new WindowsNotifactionService();
+                            notificationService = new WindowsNotificationService();
                             break;
                         case TELEGRAM:
                             String arg = getArg(args, 1);
