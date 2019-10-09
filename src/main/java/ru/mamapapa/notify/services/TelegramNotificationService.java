@@ -1,9 +1,14 @@
 package ru.mamapapa.notify.services;
 
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import ru.mamapapa.Notification;
 import ru.mamapapa.NotificationService;
@@ -11,6 +16,9 @@ import ru.mamapapa.exeption.NotifyRuntimeException;
 import ru.mamapapa.notify.NotificationResponse;
 import ru.mamapapa.notify.services.dto.NotificationData;
 
+import javax.net.ssl.*;
+import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -24,13 +32,12 @@ import static ru.mamapapa.Notification.PropertyKey.TELEGRAM_SERVER_NOTIFICATION;
  */
 public class TelegramNotificationService implements NotificationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TelegramNotificationService.class);
-    private static final RestTemplate REST_TEMPLATE = new RestTemplate();
     private static final int DEFAULT_MAX_ATTEMPT = 3;
     private static AtomicInteger counterAttempt = new AtomicInteger(1);
-    private final String userId;
+    private final List<String> userIds;
 
-    public TelegramNotificationService(String userId) {
-        this.userId = userId;
+    public TelegramNotificationService(List<String> userIds) {
+        this.userIds = userIds;
     }
 
     @Override
@@ -39,7 +46,7 @@ public class TelegramNotificationService implements NotificationService {
         LOGGER.debug("Отправка уведомления в телеграм. Данные для отправки: {}", postData);
         try {
             String url = Notification.getProperty().getString(TELEGRAM_SERVER_NOTIFICATION);
-            NotificationResponse response = REST_TEMPLATE.postForObject(url.trim(), getHttpEntity(postData, getHttpHeaders()), NotificationResponse.class);
+            NotificationResponse response = getRestTemplate().postForObject(url.trim(), getHttpEntity(postData, getHttpHeaders()), NotificationResponse.class);
             resendingNotify(header, body, response);
         } catch (Exception e) {
             LOGGER.error("Не удалось отправить уведомление в телеграм", e);
@@ -66,7 +73,7 @@ public class TelegramNotificationService implements NotificationService {
         NotificationData request = new NotificationData();
         request.setHeader(header);
         request.setBody(body);
-        request.setUserId(userId);
+        request.setUserId(userIds);
         return request;
     }
 
@@ -79,5 +86,26 @@ public class TelegramNotificationService implements NotificationService {
         HttpHeaders headers = new HttpHeaders();
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
         return headers;
+    }
+
+    private RestTemplate getRestTemplate() throws Exception
+    {
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build();
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+        return new RestTemplate(requestFactory);
     }
 }

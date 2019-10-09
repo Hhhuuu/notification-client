@@ -42,6 +42,7 @@ public class WindowsNotificationService implements NotificationService {
             trayIcon = new TrayIcon(image);
             tray = SystemTray.getSystemTray();
             tray.add(trayIcon);
+            trayIcon.addActionListener(actionEvent -> tray.remove(trayIcon));
         }
         trayIcon.displayMessage(header, body, TrayIcon.MessageType.INFO);
     }

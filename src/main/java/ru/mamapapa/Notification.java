@@ -1,16 +1,17 @@
 package ru.mamapapa;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 import ru.mamapapa.exeption.NotifyException;
 import ru.mamapapa.exeption.NotifyRuntimeException;
 import ru.mamapapa.notify.services.*;
 import ru.mamapapa.property.*;
 
 import java.io.*;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static ru.mamapapa.Notification.PropertyKey.*;
@@ -38,7 +39,8 @@ public class Notification {
         DELAY("delay.before.next.read.file"),
         CHANNEL("channel.notification"),
         SEARCH_CONTAINS("search.contains"),
-        TELEGRAM_SERVER_NOTIFICATION("TELEGRAM.server.notification");
+        TELEGRAM_SERVER_NOTIFICATION("TELEGRAM.server.notification"),
+        TELEGRAM_CLIENT_IDS("client.ids");
 
         private final String value;
 
@@ -93,9 +95,11 @@ public class Notification {
                             notificationService = new WindowsNotificationService();
                             break;
                         case TELEGRAM:
-                            String arg = getArg(args, 1);
-                            checkArg(arg, SET_USER_ID);
-                            notificationService = new TelegramNotificationService(arg);
+                            List<String> clientIds = getUserIds(args);
+                            if (CollectionUtils.isEmpty(clientIds)) {
+                                checkArg(null, SET_USER_ID);
+                            }
+                            notificationService = new TelegramNotificationService(clientIds);
                             break;
                         default:
                             notificationService = new LogNotificationService();
@@ -109,6 +113,23 @@ public class Notification {
             }
         } else {
             throw new NotifyRuntimeException("Не заданы каналы для уведомлений!");
+        }
+    }
+
+    private static List<String> getUserIds(String[] args) throws NotifyException
+    {
+        if (ArrayUtils.isNotEmpty(args) && args.length == 2)
+        {
+            String arg = getArg(args, 1);
+            checkArg(arg, SET_USER_ID);
+            return Collections.singletonList(arg.trim());
+        }
+        else
+        {
+            String ids = property.getString(TELEGRAM_CLIENT_IDS, "");
+            checkArg(ids, SET_USER_ID);
+            ids = ids.replaceAll("\\s+", "");
+            return Arrays.asList(ids.split(","));
         }
     }
 
