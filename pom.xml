@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.mamapapa.Notification</mainClass>
+                            <mainClass>ru.mamapapa.NotificationRun</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

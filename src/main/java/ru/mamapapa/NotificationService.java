@@ -9,8 +9,7 @@ public interface NotificationService {
     /**
      * Отправка уведомлений
      *
-     * @param header - заголовок сообщения
-     * @param body   - тело сообщения
+     * @param message - сообщение
      */
-    void sendNotify(String header, String body);
+    void sendNotify(Message message);
 }
