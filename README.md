@@ -25,3 +25,6 @@
 | channel.notification | Доступные каналы для уведомлений |
 | TELEGRAM.server.notification | Сервер уведомлений для телеграма |
 | client.ids | Идентификаторы клиентов через запятую. Только для отправки в телеграм |
+| text.application.is.running | Поиск запущенных приложений |
+| text.application.is.not.running | Поиск приложений, которые не удалось запустить |
+| applications | Список доступных приложений через запятую |
